@@ -1,8 +1,5 @@
-# Optional 
 name: Node.js CI 
 
-# Required
-# Name of GitHub event that triggers the workflow
 on:
   push:
     branches: [ "main", "gh-pages" ]
@@ -12,9 +9,6 @@ on:
 permissions:
   contents: write 
 
-# Required
-# One / more Jobs are mention to triger on github event 
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,6 +16,10 @@ jobs:
     strategy:
       matrix:
         node-version: [22.x]
+
+    defaults:
+      run:
+        working-directory: Frontend   # ✅ IMPORTANT FIX
 
     steps:
     - uses: actions/checkout@v4
@@ -31,10 +29,16 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: Frontend/package-lock.json  # ✅ FIX
 
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build project
+      run: npm run build --if-present
+
+    - name: Test project
+      run: npm test --if-present
 
     - name: Deploy with gh-pages
       env:
