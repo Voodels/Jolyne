@@ -1,3 +1,5 @@
+import { useState } from "react";
+import logo from '../../assets/images/Logo2.png';
 import Sidebar from '../Sidebar/Sidebar';
 import TopBar from '../TopBar/TopBar';
 import './Dashboard.css';
@@ -101,19 +103,26 @@ function SparkLine({ data }) {
 }
 
 function Dashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
+
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="app-content">
-        <TopBar />
+      <Sidebar isOpen={isSidebarOpen} />
+      <div className={`app-content ${isSidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+        <TopBar toggleSidebar={toggleSidebar} />
         <main className="dashboard-main">
           <div className="dashboard-welcome-row">
             <div>
-              <h1 className="dashboard-welcome-title">Welcome to Hein+Fricke</h1>
+              <h1 className="dashboard-welcome-title">Welcome to H+F</h1>
               <p className="dashboard-welcome-sub">HR and Recruitment Platform</p>
             </div>
             <div className="dashboard-logo-text">
-              Hein<span>✛</span>Fricke
+              <img src={logo} alt="Hein+Fricke Logo" className="logo-img" />
             </div>
           </div>
 

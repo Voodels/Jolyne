@@ -1,13 +1,14 @@
 import './TopBar.css';
 
-function TopBar() {
+function TopBar({ toggleSidebar }) {
   return (
     <header className="topbar">
-      <div className="topbar-hamburger">
+      <div className="topbar-hamburger" onClick={toggleSidebar}>
         <span></span>
         <span></span>
         <span></span>
       </div>
+
       <div className="topbar-actions">
         <button className="topbar-icon-btn notification-btn">
           🔔

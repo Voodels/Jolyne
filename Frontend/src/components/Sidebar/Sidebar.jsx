@@ -11,8 +11,10 @@ const navItems = [
   { label: 'Settings', icon: '⚙', path: '/settings' },
 ];
 
-function Sidebar() {
+function Sidebar({ isOpen }) {
   return (
+    <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
+      {/* sidebar content */}
     <aside className="sidebar">
       <div className="sidebar-brand">
         <span className="sidebar-brand-icon">👥</span>
@@ -42,6 +44,7 @@ function Sidebar() {
         </div>
       </div>
     </aside>
+    </div>
   );
 }
 

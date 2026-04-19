@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import logo from '../../assets/images/Logo1.png';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -23,9 +24,7 @@ function LoginPage() {
     <div className="login-wrapper">
       <header className="login-header">
         <div className="landing-logo">
-          <span className="logo-hein">Hein</span>
-          <span className="logo-cross">✛</span>
-          <span className="logo-fricke">Fricke</span>
+          <img src={logo} alt="Hein+Fricke Logo" className="logo-img" />
         </div>
         <p className="login-subtitle">HR and Recruitment Platform</p>
       </header>
@@ -33,7 +32,7 @@ function LoginPage() {
       <main className="login-main">
         <div className="login-card">
           <h2 className="login-title">Sign in</h2>
-          <p className="login-role-label">{roleLabel} Portal</p>
+          {/* <p className="login-role-label">{roleLabel} Portal</p> */}
 
           <form onSubmit={handleLogin} className="login-form">
             <div className="form-group">

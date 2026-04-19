@@ -32,6 +32,12 @@ function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -76,9 +82,9 @@ function AIAssistant() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="app-content">
-        <TopBar />
+      <Sidebar isOpen={isSidebarOpen} />
+      <div className={`app-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <TopBar toggleSidebar={toggleSidebar} />
         <main className="ai-main">
           <div className="ai-chat-wrapper">
             {/* Chat Header */}

@@ -10,6 +10,7 @@
   top: 0;
   left: 0;
   z-index: 100;
+  transition: transform 0.3s ease;
 }
 
 .sidebar-brand {
@@ -18,6 +19,15 @@
   gap: 10px;
   padding: 22px 20px 18px;
   border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.sidebar.closed {
+  transform: translateX(-100%);
+}
+
+/* Show sidebar */
+.sidebar.open {
+  transform: translateX(0);
 }
 
 .sidebar-brand-icon {

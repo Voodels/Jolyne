@@ -10,6 +10,7 @@
   flex-direction: column;
   background: var(--color-bg);
   min-height: 100vh;
+  transition: margin-left 0.3s ease;
 }
 
 .dashboard-main {
@@ -20,6 +21,9 @@
 }
 
 .dashboard-welcome-row {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -28,12 +32,12 @@
 .dashboard-welcome-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: black;
 }
 
 .dashboard-welcome-sub {
   font-size: 0.85rem;
-  color: var(--color-text-secondary);
+  color: black;
   margin-top: 2px;
 }
 
@@ -174,4 +178,19 @@
   font-size: 0.7rem;
   color: var(--color-text-muted);
   padding: 4px 20px 0;
+}
+
+.app-content.sidebar-open {
+  margin-left: 210px;
+}
+
+/* When sidebar hidden */
+.app-content.sidebar-closed {
+  margin-left: 0;
+}
+
+.logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }

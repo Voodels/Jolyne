@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/images/Logo.png';
+import logo from '../../assets/images/Logo1.png';
 import './LandingPage.css';
 
 function LandingPage() {

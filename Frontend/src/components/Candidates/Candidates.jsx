@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import TopBar from '../TopBar/TopBar';
@@ -69,11 +70,17 @@ const candidates = [
 function Candidates() {
   const navigate = useNavigate();
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="app-content">
-        <TopBar />
+      <Sidebar isOpen={isSidebarOpen} />
+      <div className={`app-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <TopBar toggleSidebar={toggleSidebar} />
         <main className="candidates-main">
           <div className="candidates-header">
             <h2 className="candidates-title">Candidates</h2>

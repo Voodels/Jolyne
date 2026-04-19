@@ -1,150 +1,114 @@
-.login-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #e8eaef;
-}
 
+/* HEADER */
 .login-header {
   background: var(--color-navy);
   padding: 40px 20px 36px;
   text-align: center;
 }
 
-.login-header .landing-logo {
-  font-size: 2.6rem;
-  font-weight: 700;
-  color: var(--color-white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.logo-hein, .logo-fricke {
-  color: var(--color-white);
-}
-
-.logo-cross {
-  color: var(--color-white);
-  font-size: 2rem;
-  margin: 0 3px;
-}
-
 .login-subtitle {
   color: rgba(255,255,255,0.7);
   font-size: 1rem;
-  margin-top: 8px;
-}
-
-.login-main {
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 48px 24px;
-}
-
-.login-card {
-  background: var(--color-white);
-  border-radius: var(--radius-md);
-  padding: 32px 36px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: var(--shadow-md);
-}
-
-.login-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-navy);
-  margin-bottom: 2px;
-}
-
-.login-role-label {
-  font-size: 0.8rem;
-  color: var(--color-primary);
-  font-weight: 500;
-  margin-bottom: 20px;
-  text-transform: uppercase;
+  margin-top: 12px;
   letter-spacing: 0.5px;
 }
 
+/* MAIN BACKGROUND */
+.login-main {
+  padding: 44px 24px 24px 12px;
+  background-color: rgba(128, 150, 150, 0.117);
+  height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CARD */
+.login-card {
+  background: #fff;
+  border-radius: 4px;
+  width: 350px;
+  padding: 20px;
+}
+
+/* TITLE */
+.login-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #939ba2;
+  margin-bottom: 10px;
+}
+
+.login-role-label {
+  font-size: 13px;
+  margin-bottom: 15px;
+  color: #6c757d;
+}
+
+/* FORM */
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.required {
-  color: var(--color-danger);
-}
-
-.form-group input {
-  padding: 9px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  color: var(--color-text-primary);
-  transition: border-color 0.15s;
-}
-
-.form-group input:focus {
-  border-color: var(--color-primary);
-}
-
-.captcha-box {
-  background: #f0f2f7;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 12px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: 6px;
-  text-align: center;
-  color: var(--color-navy);
-  font-family: monospace;
-  user-select: none;
-  margin-bottom: 4px;
-}
-
-.btn-login {
-  background: var(--color-danger);
-  color: var(--color-white);
-  padding: 8px 20px;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
+  font-size: 12px;
   font-weight: 600;
-  align-self: flex-start;
-  margin-top: 4px;
-  transition: background 0.15s;
+  color: #6c757d;
+  margin-bottom: 4px;
+  display: block;
+}
+
+input {
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid #ced4da;
+  color: #495057;
+}
+
+/* CAPTCHA */
+.captcha-box {
+  border: 1px solid black;
+  padding: 10px;
+  margin-bottom: 5px;
+  text-align: center;
+  letter-spacing: 3px;
+  font-weight: bold;
+}
+
+/* BUTTON */
+.btn-login {
+  text-decoration: none;
+  width: fit-content;
+  color: #dc3545;
+  padding: 5px 12px;
+  border: 1px solid #dc3545;
+  background: transparent;
+  cursor: pointer;
 }
 
 .btn-login:hover {
-  background: #dc2626;
+  background-color: #dc3545;
+  color: #fff;
 }
 
+/* FORGOT PASSWORD */
 .forgot-password {
-  display: block;
-  text-align: center;
-  margin-top: 16px;
-  font-size: 0.88rem;
-  color: var(--color-primary);
-  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  color: #52d0e6;
 }
 
-.forgot-password:hover {
-  text-decoration: underline;
+/* MOBILE */
+@media screen and (max-width: 480px) {
+  .login-card {
+    width: 90%;
+  }
 }

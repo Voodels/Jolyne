@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../../assets/images/Logo1.png';
 import './OTPPage.css';
 
 function OTPPage() {
@@ -15,9 +16,7 @@ function OTPPage() {
     <div className="otp-wrapper">
       <header className="otp-header">
         <div className="landing-logo">
-          <span className="logo-hein">Hein</span>
-          <span className="logo-cross">✛</span>
-          <span className="logo-fricke">Fricke</span>
+          <img src={logo} alt="Hein+Fricke Logo" className="logo-img" />
         </div>
         <p className="otp-subtitle">HR and Recruitment Platform</p>
       </header>

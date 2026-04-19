@@ -10,11 +10,19 @@ function CandidateProfile() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Overview');
 
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
   return (
     <div className="app-layout">
-      <Sidebar />
-      <div className="app-content">
-        <TopBar />
+      <Sidebar isOpen={isSidebarOpen} />
+
+      <div className={`app-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <TopBar toggleSidebar={toggleSidebar} />
         <main className="profile-main">
           <div className="profile-breadcrumb">
             <button className="back-btn" onClick={() => navigate('/candidates')}>
