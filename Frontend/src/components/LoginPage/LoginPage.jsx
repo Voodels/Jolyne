@@ -18,7 +18,7 @@ function LoginPage() {
     navigate('/otp');
   };
 
-  const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User';
+  // const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User';
 
   return (
     <div className="login-wrapper">
@@ -75,7 +75,7 @@ function LoginPage() {
             <button type="submit" className="btn-login">Login</button>
           </form>
 
-          <a href="#" className="forgot-password">Forgot Password</a>
+          <a href="https://www.google.com" className="forgot-password">Forgot Password</a>
         </div>
       </main>
     </div>
