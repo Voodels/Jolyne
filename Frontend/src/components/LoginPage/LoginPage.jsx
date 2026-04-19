@@ -4,7 +4,7 @@ import logo from '../../assets/images/Logo1.png';
 import './LoginPage.css';
 
 function LoginPage() {
-  const { role } = useParams();
+  // const { role } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '', captcha: '' });
   const [captchaValue] = useState(Math.random().toString(36).substring(2, 8).toUpperCase());
