@@ -132,3 +132,18 @@ ISSUE
 
 Show exact error why error is there while form fill up 
 
+{
+    "firstName": "Asuh",
+    "lastName": "Bhoyar",
+    "email": "Pjjhjmsskhh@example.com",
+    "phone": "8888888888",
+    "location": "Remote",
+    "yearsOfExperience": 4,
+    "department": "ENGINEERING",
+    "skills": "Spring Boot, Postman Testing",
+    "resumeUrl": "https://res.cloudinary.com/demo/sample.pdf",
+    "currentCompany": "API Tester Inc",
+    "currentCtc": "12 LPA",
+    "education": "B.Tech CS",
+    "currentStage": "APPLIED"
+}

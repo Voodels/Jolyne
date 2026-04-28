@@ -1,27 +1,18 @@
 package com.example.demo.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.Type;
 
 import com.example.demo.enums.Department;
 import com.example.demo.enums.PipelineStage;
+import com.vladmihalcea.hibernate.type.json.JsonType;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "candidates")
@@ -29,219 +20,183 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 public class Candidate {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	// Personal Information
-	@Column(nullable = false)
-	private String firstName;
+    // =========================
+    // PERSONAL INFORMATION
+    // =========================
 
-	@Column(nullable = false)
-	private String lastName;
+    private String fullName;
 
-	@Column(unique = true, nullable = false)
-	private String email;
+    @Column(nullable = false)
+    private String firstName;
 
-	private String phone;
-	private String location;
+    private String middleName;
 
-	// Professional Information
-	private Integer yearsOfExperience;
+    @Column(nullable = false)
+    private String lastName;
 
-	@Enumerated(EnumType.STRING)
-	private Department department;
+    @Column(unique = true, nullable = false)
+    private String email;
 
-	@Column(name = "resume_url")
+    private String phone;
+    private String alternatePhone;
+
+    private LocalDate dateOfBirth;
+    private String gender;
+
+    private String addressFull;
+    private String city;
+    private String state;
+    private String country;
+    private String pincode;
+
+    private String location;
+
+    // =========================
+    // LINKS
+    // =========================
+
+    private String linkedinUrl;
+    private String githubUrl;
+    private String portfolioUrl;
+    private String websiteUrl;
+
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String otherLinks;
+
+    // =========================
+    // SUMMARY
+    // =========================
+
+    @Column(columnDefinition = "TEXT")
+    private String summaryText;
+
+    @Column(columnDefinition = "TEXT")
+    private String careerObjective;
+
+    // =========================
+    // PROFESSIONAL INFO
+    // =========================
+
+    private Integer yearsOfExperience;
+    private Double totalExperienceYears;
+
+    private String currentJobTitle;
+    private String currentCompany;
+    private String currentCtc;
+
+    private String highestEducation;
+    private String primarySkill;
+    private String domain;
+
+    @Enumerated(EnumType.STRING)
+    private Department department;
+
+    @Column(name = "resume_url")
     private String resumeUrl;
 
-	@Column(columnDefinition = "TEXT")
-	private String skills; // comma-separated, e.g., "Java,Spring,PostgreSQL"
+    @Column(columnDefinition = "TEXT")
+    private String skills;
 
-	private String currentCompany;
-	private String currentCtc; // Cost to Company (Salary)
+    @Column(columnDefinition = "TEXT")
+    private String resumeText;
 
-	@Column(columnDefinition = "TEXT")
-	private String resumeText; // Extracted text from uploaded resume
+    private String education;
 
-	private String education; // e.g., "B.Tech in Computer Science"
+    // =========================
+    // JSONB RESUME SECTIONS
+    // =========================
 
-	// Recruitment Pipeline
-	@Enumerated(EnumType.STRING)
-	private PipelineStage currentStage;
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String educationDetails;
 
-	@Column(columnDefinition = "jsonb")
-	private String stageHistory; // Stores JSON array of stage transitions
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String experienceDetails;
 
-	// AI & Vector Data
-//	@Column(columnDefinition = "vector(1536)")
-//	private float[] embedding; // Stores the 1536-dimensional vector
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String projects;
 
-	// Timestamps
-	@CreationTimestamp
-	@Column(updatable = false)
-	private LocalDateTime createdAt;
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String skillsDetailed;
 
-	@UpdateTimestamp
-	private LocalDateTime updatedAt;
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String achievements;
 
-	// Helper method to get full name
-	public String getFullName() {
-		return firstName + " " + lastName;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String certifications;
 
-	// Helper method to update stage with history
-	public void updateStage(PipelineStage newStage) {
-		// Logic to update stage and append to stageHistory
-		this.currentStage = newStage;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String positions;
 
-	public Long getId() {
-		return id;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String codingProfiles;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String languages;
 
-	public String getFirstName() {
-		return firstName;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String publications;
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String activities;
 
-	public String getLastName() {
-		return lastName;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String sectionName;
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String sectionData;
 
-	public String getEmail() {
-		return email;
-	}
+    // =========================
+    // PIPELINE
+    // =========================
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    @Enumerated(EnumType.STRING)
+    private PipelineStage currentStage;
 
-	public String getPhone() {
-		return phone;
-	}
+    @Type(JsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private String stageHistory;
 
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
+    // =========================
+    // TIMESTAMPS
+    // =========================
 
-	public String getLocation() {
-		return location;
-	}
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
-	public void setLocation(String location) {
-		this.location = location;
-	}
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
-	public Integer getYearsOfExperience() {
-		return yearsOfExperience;
-	}
+    // =========================
+    // HELPER METHODS
+    // =========================
 
-	public void setYearsOfExperience(Integer yearsOfExperience) {
-		this.yearsOfExperience = yearsOfExperience;
-	}
+    public String getFullNameComputed() {
+        return (firstName != null ? firstName : "") + " " +
+               (lastName != null ? lastName : "");
+    }
 
-	public Department getDepartment() {
-		return department;
-	}
-
-	public void setDepartment(Department department) {
-		this.department = department;
-	}
-
-	public String getSkills() {
-		return skills;
-	}
-
-	public void setSkills(String skills) {
-		this.skills = skills;
-	}
-
-	public String getCurrentCompany() {
-		return currentCompany;
-	}
-
-	public void setCurrentCompany(String currentCompany) {
-		this.currentCompany = currentCompany;
-	}
-
-	public String getCurrentCtc() {
-		return currentCtc;
-	}
-
-	public void setCurrentCtc(String currentCtc) {
-		this.currentCtc = currentCtc;
-	}
-
-	public String getResumeText() {
-		return resumeText;
-	}
-
-	public void setResumeText(String resumeText) {
-		this.resumeText = resumeText;
-	}
-
-	public String getEducation() {
-		return education;
-	}
-
-	public void setEducation(String education) {
-		this.education = education;
-	}
-
-	public PipelineStage getCurrentStage() {
-		return currentStage;
-	}
-
-	public void setCurrentStage(PipelineStage currentStage) {
-		this.currentStage = currentStage;
-	}
-
-	public String getStageHistory() {
-		return stageHistory;
-	}
-
-	public void setStageHistory(String stageHistory) {
-		this.stageHistory = stageHistory;
-	}
-
-//	public float[] getEmbedding() {
-//		return embedding;
-//	}
-//
-//	public void setEmbedding(float[] embedding) {
-//		this.embedding = embedding;
-//	}
-
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	public LocalDateTime getUpdatedAt() {
-		return updatedAt;
-	}
-
-	public void setUpdatedAt(LocalDateTime updatedAt) {
-		this.updatedAt = updatedAt;
-	}
-
+    public void updateStage(PipelineStage newStage) {
+        this.currentStage = newStage;
+    }
 }

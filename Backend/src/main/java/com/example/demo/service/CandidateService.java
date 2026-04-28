@@ -21,6 +21,23 @@ public interface CandidateService {
 	void deleteCandidate(Long id);
 
 	String uploadResume(MultipartFile file);
+
+	CandidateResponseDto createFromResumeJson(String json);
+
+CandidateResponseDto updateFromResumeJson(Long id, String json);
+
+Page<CandidateResponseDto> filterCandidates(
+    String name,
+    String skill,
+    String company,
+    String domain,
+    Double minExperience,
+    Double maxExperience,
+    Pageable pageable
+);
+
+
+String getResumeJson(Long id);
 	
 	CandidateResponseDto updatePipelineStage(Long id, String stage);
 

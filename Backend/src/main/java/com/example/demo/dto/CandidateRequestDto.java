@@ -1,5 +1,7 @@
 package com.example.demo.dto;
 
+import java.time.LocalDate;
+
 import com.example.demo.enums.Department;
 import com.example.demo.enums.PipelineStage;
 
@@ -8,126 +10,94 @@ import lombok.Data;
 @Data
 public class CandidateRequestDto {
 
-	private String firstName;
+    // =========================
+    // PERSONAL INFO
+    // =========================
 
-	private String lastName;
+    private String fullName;
+    private String firstName;
+    private String middleName;
+    private String lastName;
 
-	private String email;
+    private String email;
+    private String phone;
+    private String alternatePhone;
 
-	private String phone;
-	private String location;
-	private Integer yearsOfExperience;
-	private Department department;
-	private String skills;
-	private String currentCompany;
-	private String currentCtc;
-	private String education;
-	private PipelineStage currentStage;
-	private String resumeUrl; // optional if uploading separately
+    private LocalDate dateOfBirth;
+    private String gender;
 
-	public String getFirstName() {
-		return firstName;
-	}
+    private String addressFull;
+    private String city;
+    private String state;
+    private String country;
+    private String pincode;
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
+    private String location;
 
-	public String getLastName() {
-		return lastName;
-	}
+    // =========================
+    // LINKS
+    // =========================
 
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+    private String linkedinUrl;
+    private String githubUrl;
+    private String portfolioUrl;
+    private String websiteUrl;
 
-	public String getEmail() {
-		return email;
-	}
+    private String otherLinks; // JSON string
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    // =========================
+    // SUMMARY
+    // =========================
 
-	public String getPhone() {
-		return phone;
-	}
+    private String summaryText;
+    private String careerObjective;
 
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
+    // =========================
+    // PROFESSIONAL INFO
+    // =========================
 
-	public String getLocation() {
-		return location;
-	}
+    private Integer yearsOfExperience;
+    private Double totalExperienceYears;
 
-	public void setLocation(String location) {
-		this.location = location;
-	}
+    private String currentJobTitle;
+    private String currentCompany;
+    private String currentCtc;
 
-	public Integer getYearsOfExperience() {
-		return yearsOfExperience;
-	}
+    private String highestEducation;
+    private String primarySkill;
+    private String domain;
 
-	public void setYearsOfExperience(Integer yearsOfExperience) {
-		this.yearsOfExperience = yearsOfExperience;
-	}
+    private Department department;
 
-	public Department getDepartment() {
-		return department;
-	}
+    private String skills; // simple
 
-	public void setDesignation(Department department) {
-		this.department = department;
-	}
+    private String education;
 
-	public String getSkills() {
-		return skills;
-	}
+    private String resumeUrl;
+    private String resumeText;
 
-	public void setSkills(String skills) {
-		this.skills = skills;
-	}
+    // =========================
+    // JSONB FIELDS
+    // =========================
 
-	public String getCurrentCompany() {
-		return currentCompany;
-	}
+    private String educationDetails;
+    private String experienceDetails;
+    private String projects;
+    private String skillsDetailed;
+    private String achievements;
+    private String certifications;
+    private String positions;
+    private String codingProfiles;
+    private String languages;
+    private String publications;
+    private String activities;
+    private String sectionName;
+    private String sectionData;
 
-	public void setCurrentCompany(String currentCompany) {
-		this.currentCompany = currentCompany;
-	}
+    // =========================
+    // PIPELINE
+    // =========================
 
-	public String getCurrentCtc() {
-		return currentCtc;
-	}
-
-	public void setCurrentCtc(String currentCtc) {
-		this.currentCtc = currentCtc;
-	}
-
-	public String getEducation() {
-		return education;
-	}
-
-	public void setEducation(String education) {
-		this.education = education;
-	}
-
-	public PipelineStage getCurrentStage() {
-		return currentStage;
-	}
-
-	public void setCurrentStage(PipelineStage currentStage) {
-		this.currentStage = currentStage;
-	}
-	
-
-	public String getResumeUrl() {
-    return resumeUrl;
-}
-
-public void setResumeUrl(String resumeUrl) {
-    this.resumeUrl = resumeUrl;
-}
-
+    private PipelineStage currentStage;
+    private String stageHistory;
 }
