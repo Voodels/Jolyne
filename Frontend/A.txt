@@ -11,3 +11,10 @@ TODO (Frontend)
 
 Pipleline 
 
+///////// SMTP 
+
+///////// Interview scheduling 
+
+///////// Li - Gi --> Parsing --> (Summary) 
+
+///////// 

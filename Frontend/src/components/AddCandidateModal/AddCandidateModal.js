@@ -10,19 +10,67 @@ const AFFINDA_API_KEY = process.env.REACT_APP_AFFINDA_API_KEY;
 function AddCandidateModal({ isOpen, onClose, onAdd, editData }) {
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    jobTitle: '',
-    skills: '',
-    phone: '',
-    location: '',
-    yearsOfExperience: 0,
-    department: '',
-    currentCompany: '',
-    currentCtc: '',
-    education: '',
-    currentStage: '',
-    resume: null,
+  // ===== BASIC =====
+  fullName: '',
+  firstName: '',
+  middleName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  alternatePhone: '',
+  dateOfBirth: '',
+  gender: '',
+
+  // ===== LOCATION =====
+  addressFull: '',
+  city: '',
+  state: '',
+  country: '',
+  pincode: '',
+  location: '',
+
+  // ===== LINKS =====
+  linkedinUrl: '',
+  githubUrl: '',
+  portfolioUrl: '',
+  websiteUrl: '',
+  otherLinks: [],
+
+  // ===== SUMMARY =====
+  summaryText: '',
+  careerObjective: '',
+
+  // ===== PROFESSIONAL =====
+  yearsOfExperience: 0,
+  totalExperienceYears: 0,
+  currentJobTitle: '',
+  currentCompany: '',
+  currentCtc: '',
+  highestEducation: '',
+  primarySkill: '',
+  domain: '',
+  department: '',
+
+  // ===== ARRAYS (IMPORTANT) =====
+  educationDetails: [],
+  experienceDetails: [],
+  projects: [],
+  skillsDetailed: [],
+  achievements: [],
+  certifications: [],
+  positions: [],
+  codingProfiles: [],
+  languages: [],
+  publications: [],
+  activities: [],
+  sectionName: [],
+  sectionData: [],
+
+  // ===== PIPELINE =====
+  currentStage: 'APPLIED',
+
+  // ===== FILE =====
+  resume: null
   });
 
   const [resumeUrl, setResumeUrl] = useState('');
@@ -128,11 +176,15 @@ const parseResume = async (file) => {
 
     const parsed = data?.data || {};
 
-    // ---------------- BASIC INFO ----------------
+    // ================= BASIC =================
     const name =
-      parsed?.fullName ||
-      parsed?.name?.raw ||
-      `${parsed?.firstName || ""} ${parsed?.lastName || ""}`.trim();
+  parsed?.fullName ||
+  parsed?.name?.raw ||
+  `${parsed?.firstName || ""} ${parsed?.lastName || ""}`.trim();
+
+  const firstName = parsed?.firstName || "";
+const middleName = parsed?.middleName || "";
+const lastName = parsed?.lastName || "";
 
     const email =
       parsed?.email ||
@@ -144,67 +196,148 @@ const parseResume = async (file) => {
       (Array.isArray(parsed?.phoneNumbers) ? parsed.phoneNumbers[0] : "") ||
       "";
 
-    // ---------------- JOB ----------------
+    const alternatePhone =
+      Array.isArray(parsed?.phoneNumbers) && parsed.phoneNumbers.length > 1
+        ? parsed.phoneNumbers[1]
+        : "";
+
+    const dateOfBirth = parsed?.dateOfBirth || "";
+    const gender = parsed?.gender || "";
+
+    // ================= LOCATION =================
+    const addressFull = parsed?.addressFull || "";
+    const city = parsed?.city || "";
+    const state = parsed?.state || "";
+    const country = parsed?.country || "";
+    const pincode = parsed?.pincode || "";
+
+    const location =
+      city || state || country || addressFull || "";
+
+    // ================= LINKS =================
+    const linkedinUrl = parsed?.linkedinUrl || "";
+    const githubUrl = parsed?.githubUrl || "";
+    const portfolioUrl = parsed?.portfolioUrl || "";
+    const websiteUrl = parsed?.websiteUrl || "";
+    const otherLinks = parsed?.otherLinks || [];
+
+    // ================= SUMMARY =================
+    const summaryText = parsed?.summaryText || "";
+    const careerObjective = parsed?.careerObjective || "";
+
+    // ================= JOB =================
     const jobTitle =
       parsed?.currentJobTitle ||
-      (Array.isArray(parsed?.experience) && parsed.experience[0]?.jobTitle) ||
+      (parsed?.experience?.[0]?.jobTitle) ||
       "";
 
     const currentCompany =
       parsed?.currentCompany ||
-      (Array.isArray(parsed?.experience) && parsed.experience[0]?.companyName) ||
+      (parsed?.experience?.[0]?.companyName) ||
       "";
 
-    // ---------------- EXPERIENCE ----------------
-    const yearsOfExperience = parsed?.totalExperienceYears || 0;
+    const domain = parsed?.domain || "";
 
-    // ---------------- LOCATION ----------------
-    const location =
-      parsed?.city ||
-      parsed?.state ||
-      parsed?.country ||
-      parsed?.addressFull ||
-      "";
+    // ================= EXPERIENCE =================
+    const totalExperienceYears = parsed?.totalExperienceYears || 0;
 
-    // ---------------- EDUCATION ----------------
-    const education =
+    // ================= EDUCATION =================
+    const highestEducation =
       parsed?.highestEducation ||
-      (Array.isArray(parsed?.education) &&
-        parsed.education[0]?.degree + " " +
-        (parsed.education[0]?.fieldOfStudy || "")) ||
+      (parsed?.education?.[0]?.degree + " " +
+        (parsed?.education?.[0]?.fieldOfStudy || "")) ||
       "";
 
-    // ---------------- SKILLS ----------------
-    const skills = Array.isArray(parsed?.skills)
-      ? parsed.skills
-          .filter(s => s && (s.skillName || s.name))
-          .map(s => s.skillName || s.name)
-          .join(", ")
-      : parsed?.primarySkill || "";
+    // ================= SKILLS =================
+    const skillsArray = Array.isArray(parsed?.skills)
+      ? parsed.skills.filter(s => s && (s.skillName || s.name))
+      : [];
 
-    // ---------------- CTC (NOT AVAILABLE → KEEP EMPTY) ----------------
-    const currentCtc = "";
+    const skills = skillsArray
+      .map(s => s.skillName || s.name)
+      .join(", ");
 
-    // ---------------- STAGE DEFAULT ----------------
+    const primarySkill = parsed?.primarySkill || skillsArray[0]?.skillName || "";
+
+    // ================= ARRAYS (RAW JSON) =================
+    const educationDetails = parsed?.education || [];
+    const experienceDetails = parsed?.experience || [];
+    const projects = parsed?.projects || [];
+    const skillsDetailed = parsed?.skills || [];
+    const achievements = parsed?.achievements || [];
+    const certifications = parsed?.certifications || [];
+    const positions = parsed?.positions || [];
+    const codingProfiles = parsed?.codingProfiles || [];
+    const languages = parsed?.languages || [];
+    const publications = parsed?.publications || [];
+    const activities = parsed?.activities || [];
+    const sectionName = parsed?.sectionName || [];
+    const sectionData = parsed?.sectionData || [];
+
+    // ================= DEFAULT =================
     const currentStage = "APPLIED";
 
-    // ---------------- UPDATE FORM ----------------
+    // ================= UPDATE FORM =================
     setForm(prev => ({
       ...prev,
-      name: name || prev.name,
-      email: email || prev.email,
-      jobTitle: jobTitle || prev.jobTitle,
 
-      phone: phone || prev.phone,
-      location: location || prev.location,
-      yearsOfExperience: yearsOfExperience || prev.yearsOfExperience,
-      department: jobTitle || prev.department,
-      currentCompany: currentCompany || prev.currentCompany,
-      currentCtc: currentCtc || prev.currentCtc,
-      education: education || prev.education,
-      currentStage: currentStage,
+      name,
+      firstName,
+      middleName,
+      lastName,
 
-      skills: skills || prev.skills, // still stored but hidden in UI
+      email,
+      phone,
+      alternatePhone,
+      dateOfBirth,
+      gender,
+
+      addressFull,
+      city,
+      state,
+      country,
+      pincode,
+      location,
+
+      linkedinUrl,
+      githubUrl,
+      portfolioUrl,
+      websiteUrl,
+      otherLinks,
+
+      summaryText,
+      careerObjective,
+
+      totalExperienceYears,
+      yearsOfExperience: totalExperienceYears,
+
+      currentJobTitle: jobTitle,
+      currentCompany,
+      domain,
+
+      highestEducation,
+      primarySkill,
+
+      // IMPORTANT
+      educationDetails,
+      experienceDetails,
+      projects,
+      skillsDetailed,
+      achievements,
+      certifications,
+      positions,
+      codingProfiles,
+      languages,
+      publications,
+      activities,
+      sectionName,
+      sectionData,
+
+      // UI compatibility
+      skills,
+      department: jobTitle,
+
+      currentStage
     }));
 
   } catch (err) {
@@ -215,88 +348,122 @@ const parseResume = async (file) => {
 };
 
   // ---------------- NAME SPLIT ----------------
-  const splitName = (fullName) => {
-    const parts = fullName.trim().split(' ');
-    return {
-      firstName: parts[0] || '',
-      lastName: parts.slice(1).join(' ') || '',
-    };
-  };
 
   // ---------------- SUBMIT ----------------
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const { firstName, lastName } = splitName(form.name);
+    const payload = {
+      // ---------------- BASIC ----------------
+      firstName: form.firstName,
+      middleName: form.middleName,
+      lastName: form.lastName,
+      name: form.name,
 
-      const payload = {
-        firstName,
-        lastName,
-        email: form.email,
-        skills: form.skills,
+      email: form.email,
+      phone: form.phone,
+      alternatePhone: form.alternatePhone,
+      dateOfBirth: form.dateOfBirth,
+      gender: form.gender,
 
-        phone: form.phone,
-        location: form.location,
-        yearsOfExperience: 4,
-        department: form.jobTitle,
-        currentCompany: form.currentCompany,
-        currentCtc: form.currentCtc,
-        education: form.education,
-        currentStage: "APPLIED",
+      // ---------------- LOCATION ----------------
+      addressFull: form.addressFull,
+      city: form.city,
+      state: form.state,
+      country: form.country,
+      pincode: form.pincode,
+      location: form.location,
 
-        resumeUrl: resumeUrl
-      };
+      // ---------------- LINKS ----------------
+      linkedinUrl: form.linkedinUrl,
+      githubUrl: form.githubUrl,
+      portfolioUrl: form.portfolioUrl,
+      websiteUrl: form.websiteUrl,
+      otherLinks: form.otherLinks,
 
-      let url = `${BASE_URL}/candidates`;
-      let method = 'POST';
+      // ---------------- SUMMARY ----------------
+      summaryText: form.summaryText,
+      careerObjective: form.careerObjective,
 
-      if (isEdit) {
-        url = `${BASE_URL}/candidates/${editData.id}`;
-        method = 'PUT';
-      }
+      // ---------------- EXPERIENCE ----------------
+      totalExperienceYears: form.totalExperienceYears,
+      yearsOfExperience: form.yearsOfExperience,
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      currentJobTitle: form.currentJobTitle,
+      currentCompany: form.currentCompany,
+      domain: form.domain,
 
-      if (!response.ok) throw new Error("Save failed");
+      // ---------------- EDUCATION ----------------
+      highestEducation: form.highestEducation,
+      educationDetails: form.educationDetails,
 
-      onAdd();
-      onClose();
+      // ---------------- SKILLS ----------------
+      primarySkill: form.primarySkill,
+      skills: form.skills,                // string (UI)
+      skillsDetailed: form.skillsDetailed, // array (REAL DATA)
 
-      // reset
-      setForm({
-        name: '',
-        email: '',
-        jobTitle: '',
-        skills: '',
-    phone: '',
-    location: '',
-    yearsOfExperience: 0,
-    department: '',
-    currentCompany: '',
-    currentCtc: '',
-    education: '',
-    currentStage: '',
-        resume: null,
-      });
+      // ---------------- EXPERIENCE DETAILS ----------------
+      experienceDetails: form.experienceDetails,
 
-      setResumeUrl('');
+      // ---------------- PROJECTS ----------------
+      projects: form.projects,
 
-    } catch (err) {
-      console.error(err);
-      alert("Error saving candidate");
-    } finally {
-      setLoading(false);
+      // ---------------- EXTRA ----------------
+      achievements: form.achievements,
+      certifications: form.certifications,
+      positions: form.positions,
+      codingProfiles: form.codingProfiles,
+      languages: form.languages,
+      publications: form.publications,
+      activities: form.activities,
+
+      // ---------------- SECTION RAW ----------------
+      sectionName: form.sectionName,
+      sectionData: form.sectionData,
+
+      // ---------------- PIPELINE ----------------
+      department: form.department,
+      currentStage: form.currentStage,
+
+      // ---------------- RESUME ----------------
+      resumeUrl: resumeUrl,
+    };
+
+    let url = `${BASE_URL}/candidates/full`;
+    let method = "POST";
+
+    if (isEdit) {
+      url = `${BASE_URL}/candidates/${editData.id}`;
+      method = "PUT";
     }
-  };
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) throw new Error("Save failed");
+
+    onAdd();
+    onClose();
+
+    // ✅ Reset (important for structured forms)
+    setForm({});
+    setResumeUrl("");
+
+  } catch (err) {
+    console.error(err);
+    alert("Error saving candidate");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ---------------- UI ----------------
   return (

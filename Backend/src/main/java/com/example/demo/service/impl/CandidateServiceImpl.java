@@ -62,32 +62,155 @@ public class CandidateServiceImpl implements CandidateService {
     // =========================
     // CREATE FROM FULL JSON 🔥
     // =========================
-    @Override
-    public CandidateResponseDto createFromResumeJson(String json) {
-        try {
-            JsonNode node = objectMapper.readTree(json);
 
-            Candidate candidate = new Candidate();
+	@Override
+public CandidateResponseDto createFromResumeJson(String json) {
+    try {
+        JsonNode root = objectMapper.readTree(json);
 
-            candidate.setFullName(getText(node, "fullName"));
-            candidate.setFirstName(getText(node, "firstName"));
-            candidate.setLastName(getText(node, "lastName"));
-            candidate.setEmail(getText(node, "email"));
-            candidate.setPhone(getText(node, "phone"));
+        // ✅ HANDLE BOTH CASES (IMPORTANT)
+        JsonNode data = root.has("data") ? root.get("data") : root;
 
-            candidate.setSkills(node.get("skills") != null ? node.get("skills").toString() : null);
-            candidate.setExperienceDetails(node.get("experience") != null ? node.get("experience").toString() : null);
-            candidate.setEducationDetails(node.get("education") != null ? node.get("education").toString() : null);
-            candidate.setProjects(node.get("projects") != null ? node.get("projects").toString() : null);
+        Candidate candidate = new Candidate();
 
-            candidate.setCurrentStage(PipelineStage.APPLIED);
+        // =========================
+        // NAME
+        // =========================
+        JsonNode nameNode = data.path("name");
 
-            return convertToResponseDto(candidateRepository.save(candidate));
+        String firstName = nameNode.path("first").asText("").trim();
+        String lastName = nameNode.path("last").asText("").trim();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse resume JSON");
+        if (firstName.isEmpty() && data.has("fullName")) {
+            String full = data.get("fullName").asText();
+            String[] parts = full.split(" ");
+            if (parts.length > 0) firstName = parts[0];
+            if (parts.length > 1) lastName = parts[1];
         }
+
+        if (firstName.isEmpty()) firstName = "Unknown";
+        if (lastName.isEmpty()) lastName = "Unknown";
+
+        candidate.setFirstName(firstName);
+        candidate.setLastName(lastName);
+        candidate.setFullName(firstName + " " + lastName);
+
+        // =========================
+        // EMAIL
+        // =========================
+        String email = "";
+
+        if (data.has("emails") && data.get("emails").size() > 0) {
+            email = data.get("emails").get(0).asText();
+        } else if (data.has("email")) {
+            email = data.get("email").asText();
+        }
+
+        if (email.isEmpty()) {
+            email = System.currentTimeMillis() + "@temp.com";
+        }
+
+        candidate.setEmail(email);
+
+        // =========================
+        // PHONE
+        // =========================
+        String phone = "";
+
+        if (data.has("phoneNumbers") && data.get("phoneNumbers").size() > 0) {
+            phone = data.get("phoneNumbers").get(0).asText();
+        } else if (data.has("phone")) {
+            phone = data.get("phone").asText();
+        }
+
+        candidate.setPhone(phone);
+
+        // =========================
+        // LOCATION
+        // =========================
+        JsonNode loc = data.path("location");
+        candidate.setLocation(loc.path("formatted").asText(""));
+
+        // =========================
+        // EXPERIENCE YEARS
+        // =========================
+        candidate.setTotalExperienceYears(data.path("totalYearsExperience").asDouble(0));
+
+        // =========================
+        // SKILLS (STRING + JSONB)
+        // =========================
+        if (data.has("skills") && data.get("skills").isArray()) {
+
+            // JSONB storage
+            candidate.setSkillsDetailed(data.get("skills").toString());
+
+            // Clean string for search
+            String skills = "";
+            for (JsonNode s : data.get("skills")) {
+                String name = s.path("name").asText("");
+                if (!name.isEmpty()) {
+                    skills += name + ", ";
+                }
+            }
+
+            if (!skills.isEmpty()) {
+                candidate.setSkills(skills.substring(0, skills.length() - 2));
+            }
+        }
+
+        // =========================
+        // EDUCATION
+        // =========================
+        if (data.has("education")) {
+            candidate.setEducationDetails(data.get("education").toString());
+
+            JsonNode edu = data.get("education").get(0);
+            String degree = edu.path("accreditation").path("education").asText("");
+            candidate.setEducation(degree);
+        }
+
+        // =========================
+        // EXPERIENCE
+        // =========================
+        if (data.has("workExperience")) {
+            candidate.setExperienceDetails(data.get("workExperience").toString());
+        }
+
+        // =========================
+        // CERTIFICATIONS
+        // =========================
+        if (data.has("certifications")) {
+            candidate.setCertifications(data.get("certifications").toString());
+        }
+
+        // =========================
+        // LINKS
+        // =========================
+        candidate.setLinkedinUrl(data.path("linkedin").asText(""));
+
+        if (data.has("websites")) {
+            candidate.setOtherLinks(data.get("websites").toString());
+        }
+
+        // =========================
+        // SECTIONS (PROJECTS ETC)
+        // =========================
+        if (data.has("sections")) {
+            candidate.setSectionData(data.get("sections").toString());
+        }
+
+        // =========================
+        // PIPELINE
+        // =========================
+        candidate.setCurrentStage(PipelineStage.APPLIED);
+
+        return convertToResponseDto(candidateRepository.save(candidate));
+
+    } catch (Exception e) {
+        e.printStackTrace(); // 🔥 VERY IMPORTANT
+        throw new RuntimeException("Failed to parse resume JSON: " + e.getMessage());
     }
+}
 
     // =========================
     // UPDATE (NORMAL)
