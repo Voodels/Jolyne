@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.Type;
 
-import com.example.demo.enums.Department;
 import com.example.demo.enums.PipelineStage;
 import com.vladmihalcea.hibernate.type.json.JsonType;
 
@@ -95,8 +94,7 @@ public class Candidate {
     private String primarySkill;
     private String domain;
 
-    @Enumerated(EnumType.STRING)
-    private Department department;
+    private String department;
 
     @Column(name = "resume_url")
     private String resumeUrl;

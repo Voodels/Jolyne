@@ -1,9 +1,7 @@
 package com.example.demo.dto;
 
-import java.time.LocalDate;
-
-import com.example.demo.enums.Department;
 import com.example.demo.enums.PipelineStage;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.Data;
 
@@ -15,6 +13,7 @@ public class CandidateRequestDto {
     // =========================
 
     private String fullName;
+    private String name;
     private String firstName;
     private String middleName;
     private String lastName;
@@ -23,7 +22,7 @@ public class CandidateRequestDto {
     private String phone;
     private String alternatePhone;
 
-    private LocalDate dateOfBirth;
+    private String dateOfBirth;
     private String gender;
 
     private String addressFull;
@@ -43,7 +42,7 @@ public class CandidateRequestDto {
     private String portfolioUrl;
     private String websiteUrl;
 
-    private String otherLinks; // JSON string
+    private JsonNode otherLinks;
 
     // =========================
     // SUMMARY
@@ -67,7 +66,7 @@ public class CandidateRequestDto {
     private String primarySkill;
     private String domain;
 
-    private Department department;
+    private String department;
 
     private String skills; // simple
 
@@ -80,24 +79,24 @@ public class CandidateRequestDto {
     // JSONB FIELDS
     // =========================
 
-    private String educationDetails;
-    private String experienceDetails;
-    private String projects;
-    private String skillsDetailed;
-    private String achievements;
-    private String certifications;
-    private String positions;
-    private String codingProfiles;
-    private String languages;
-    private String publications;
-    private String activities;
-    private String sectionName;
-    private String sectionData;
+    private JsonNode educationDetails;
+    private JsonNode experienceDetails;
+    private JsonNode projects;
+    private JsonNode skillsDetailed;
+    private JsonNode achievements;
+    private JsonNode certifications;
+    private JsonNode positions;
+    private JsonNode codingProfiles;
+    private JsonNode languages;
+    private JsonNode publications;
+    private JsonNode activities;
+    private JsonNode sectionName;
+    private JsonNode sectionData;
 
     // =========================
     // PIPELINE
     // =========================
 
     private PipelineStage currentStage;
-    private String stageHistory;
+    private JsonNode stageHistory;
 }

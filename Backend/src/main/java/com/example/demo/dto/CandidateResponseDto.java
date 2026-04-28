@@ -3,7 +3,6 @@ package com.example.demo.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.example.demo.enums.Department;
 import com.example.demo.enums.PipelineStage;
 
 import lombok.Data;
@@ -65,7 +64,7 @@ public class CandidateResponseDto {
     private String primarySkill;
     private String domain;
 
-    private Department department;
+    private String department;
 
     private String skills;
     private String education;
