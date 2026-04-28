@@ -1,4 +1,5 @@
 import os
+import uuid
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -37,16 +38,20 @@ class Settings:
     langsmith_api_key: Optional[str]
     google_api_key: Optional[str]
     database_url: Optional[str]
-    session_id: str = "test_session_123"
+    session_id: str
 
 
 def load_settings() -> Settings:
+    session_id = os.getenv("SESSION_ID")
+    if not session_id:
+        session_id = str(uuid.uuid4())
     return Settings(
         model_provider=os.getenv("MODEL_PROVIDER", "ollama").strip().lower(),
         ollama_model=os.getenv("OLLAMA_MODEL", "qwen2.5:7b"),
         langsmith_api_key=os.getenv("LANGSMITH_API_KEY"),
         google_api_key=os.getenv("GOOGLE_API_KEY"),
         database_url=os.getenv("NEON_DATABASE_URL"),
+        session_id=session_id,
     )
 
 
