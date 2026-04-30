@@ -104,27 +104,38 @@ ON CONFLICT (email) DO NOTHING;
 
 
 def load_settings() -> DbSettings:
+    print("[DEBUG] Loading database settings...")
     database_url = os.getenv("NEON_DATABASE_URL")
     if not database_url:
+        print("[DEBUG] ERROR: NEON_DATABASE_URL environment variable is missing.")
         raise SystemExit("Missing required environment variable: NEON_DATABASE_URL")
+    print("[DEBUG] Database URL successfully retrieved from environment.")
     return DbSettings(database_url=database_url)
 
 
 def get_engine(settings: DbSettings) -> Engine:
+    print("[DEBUG] Creating SQLAlchemy connection engine...")
     return create_engine(settings.database_url)
 
 
 def execute_sql(engine: Engine, sql_statements: Iterable[str]) -> None:
+    print("[DEBUG] Opening database connection for schema/seed execution...")
     with engine.begin() as connection:
-        for statement in sql_statements:
+        for index, statement in enumerate(sql_statements):
+            print(f"[DEBUG] Executing SQL statement block {index + 1}...")
             connection.execute(text(statement))
+    print("[DEBUG] SQL statements executed and committed successfully.")
 
 
 def verify_seed(engine: Engine) -> None:
+    print("[DEBUG] Verifying database seeding operations...")
     with engine.begin() as connection:
+        print("[DEBUG] Fetching total candidate count...")
         candidate_count = connection.execute(
             text("SELECT COUNT(*) FROM candidates")
         ).scalar_one()
+        
+        print("[DEBUG] Fetching sample rows for verification...")
         sample_rows = connection.execute(
             text(
                 """
@@ -136,6 +147,7 @@ def verify_seed(engine: Engine) -> None:
             )
         ).all()
 
+    print(f"\n[DEBUG] --- VERIFICATION RESULTS ---")
     print(f"candidates: {candidate_count}")
     print("Sample rows:")
     for row in sample_rows:
@@ -143,20 +155,26 @@ def verify_seed(engine: Engine) -> None:
             f"  {row.full_name} | {row.email} | "
             f"{row.department} | {row.current_stage} | {row.primary_skill}"
         )
+    print(f"[DEBUG] ------------------------------\n")
 
 
 def main() -> None:
+    print("[DEBUG] Starting db_page.py script...")
+    
     if load_dotenv:
+        print("[DEBUG] python-dotenv is installed. Loading .env file...")
         load_dotenv()
     else:
-        print("python-dotenv not installed; .env file will be ignored.")
+        print("[DEBUG] python-dotenv not installed; .env file will be ignored.")
 
     settings = load_settings()
     engine = get_engine(settings)
 
     execute_sql(engine, [SCHEMA_SQL, SEED_SQL])
-    print("Schema created and dummy data inserted.")
+    print("[DEBUG] Schema created and dummy data inserted.")
+    
     verify_seed(engine)
+    print("[DEBUG] Script execution finished.")
 
 
 if __name__ == "__main__":

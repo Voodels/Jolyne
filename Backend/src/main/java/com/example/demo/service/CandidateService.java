@@ -44,4 +44,6 @@ String getResumeJson(Long id);
 	List<CandidateResponseDto> searchCandidatesByName(String name);
 
 	Page<CandidateResponseDto> searchCandidatesBySkill(String skill, Pageable pageable);
+
+	String parseResumeWithAffinda(MultipartFile file);
 }

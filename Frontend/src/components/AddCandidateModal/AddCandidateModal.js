@@ -4,9 +4,6 @@ import './AddCandidateModal.css';
 
 const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-// ⚠️ NEVER expose this in production (use backend instead)
-const AFFINDA_API_KEY = process.env.REACT_APP_AFFINDA_API_KEY;
-
 function AddCandidateModal({ isOpen, onClose, onAdd, editData }) {
 
   const [form, setForm] = useState({
@@ -155,7 +152,7 @@ function AddCandidateModal({ isOpen, onClose, onAdd, editData }) {
     }
   };
 
-  // ---------------- AFFINDA PARSE ----------------
+  // ---------------- BACKEND PARSE (AFFINDA PROXY) ----------------
 const parseResume = async (file) => {
   try {
     setParsing(true);
@@ -163,11 +160,8 @@ const parseResume = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("https://api.affinda.com/v2/resumes", {
+    const res = await fetch(`${BASE_URL}/candidates/parse-resume`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${AFFINDA_API_KEY}`,
-      },
       body: formData,
     });
 

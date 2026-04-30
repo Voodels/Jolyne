@@ -1,0 +1,333 @@
+# ================================================
+# HR AI PROJECT - COMPREHENSIVE .gitignore
+# Covers: Frontend (React), Backend (Java/Spring), SQL-Agent (Python)
+# ================================================
+
+# ==================================================
+# SECURITY - NEVER COMMIT THESE
+# ==================================================
+**/.env
+**/.env.*.local
+**/.env.local
+**/.env.development
+**/.env.test
+**/.env.production
+**/secrets.properties
+**/application-*.properties
+**/application-*.yml
+!**/application-example.properties
+!**/application-example.yml
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+**/*.cer
+**/*.crt
+**/credentials.json
+**/service-account*.json
+**/google-credentials.json
+
+# API Keys & Secrets (any file containing these patterns)
+**/*apikey*
+**/*api-key*
+**/*secret*
+**/*password*
+**/*token*
+**/*credential*
+
+# ==================================================
+# PYTHON (SQL-Agent)
+# ==================================================
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# PyCharm
+.idea/
+
+# ==================================================
+# NODE / REACT (Frontend)
+# ==================================================
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Build outputs
+/build
+dist/
+*.tsbuildinfo
+
+# Testing
+/coverage
+.nyc_output
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# npm/yarn
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Next.js
+.next/
+out/
+
+# ==================================================
+# JAVA / SPRING (Backend)
+# ==================================================
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Spring
+.springBeans
+
+# ==================================================
+# IDEs & EDITORS
+# ==================================================
+# VS Code
+.vscode/
+*.code-workspace
+.history/
+
+# IntelliJ / IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse / STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+.#*
+
+# ==================================================
+# OPERATING SYSTEM
+# ==================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.nfs*
+
+# ==================================================
+# DATABASES
+# ==================================================
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+
+# ==================================================
+# LOGS & TEMP FILES
+# ==================================================
+*.log
+logs/
+log/
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.cache
+cache/
+
+# ==================================================
+# DOCKER & INFRASTRUCTURE
+# ==================================================
+docker-compose.override.yml
+.dockerignore
+Dockerfile.local
+*.dockerfile
+
+# Kubernetes
+*.kubeconfig
+.kube/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# ==================================================
+# AI / ML SPECIFIC (SQL-Agent)
+# ==================================================
+# ChromaDB
+chroma_db/
+.chroma/
+
+# Model files
+*.pt
+*.pth
+*.h5
+*.ckpt
+*.safetensors
+*.onnx
+*.mlmodel
+
+# Embeddings
+embeddings/
+vector_store/
+vectorstore/
+
+# Training data
+data/
+datasets/
+!**/src/**/data/
+
+# ==================================================
+# PROJECT SPECIFIC
+# ==================================================
+# Uploads (user files)
+uploads/
+upload/
+files/
+media/
+
+# Generated reports
+reports/
+exports/
+*.csv
+*.xlsx
+*.pdf
+
+# PDF parser output
+parsed_candidates.jsonl
+pdfparser.log
+
+# Browser previews
+*-preview*
+
+# Windsurf specific
+.windsurf/

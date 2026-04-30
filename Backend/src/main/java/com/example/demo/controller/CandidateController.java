@@ -168,4 +168,13 @@ public class CandidateController {
     public ResponseEntity<String> getResumeJson(@PathVariable Long id) {
         return ResponseEntity.ok(candidateService.getResumeJson(id));
     }
+
+    // =========================
+    // PARSE RESUME VIA AFFINDA (PROXY)
+    // =========================
+    @PostMapping("/parse-resume")
+    public ResponseEntity<String> parseResumeViaAffinda(
+            @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(candidateService.parseResumeWithAffinda(file));
+    }
 } 

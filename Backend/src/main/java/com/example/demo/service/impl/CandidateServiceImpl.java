@@ -7,10 +7,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
@@ -36,6 +43,12 @@ public class CandidateServiceImpl implements CandidateService {
     private final Cloudinary cloudinary;
     private final ObjectMapper objectMapper;
 
+    @Value("${AFFINDA_API_KEY:}")
+    private String affindaApiKey;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private static final String AFFINDA_API_URL = "https://api.affinda.com/v2/resumes";
+
     // =========================
     // FILE UPLOAD
     // =========================
@@ -49,6 +62,41 @@ public class CandidateServiceImpl implements CandidateService {
             return uploadResult.get("secure_url").toString();
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file");
+        }
+    }
+
+    // =========================
+    // PARSE RESUME VIA AFFINDA
+    // =========================
+    @Override
+    public String parseResumeWithAffinda(MultipartFile file) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(affindaApiKey);
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("file", new org.springframework.core.io.ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+
+            HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    AFFINDA_API_URL,
+                    HttpMethod.POST,
+                    requestEntity,
+                    String.class
+            );
+
+            return response.getBody();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read file for Affinda parsing", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse resume with Affinda: " + e.getMessage(), e);
         }
     }
 

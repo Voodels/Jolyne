@@ -28,6 +28,12 @@
   background: var(--color-white);
 }
 
+.ai-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .ai-header-left {
   display: flex;
   align-items: center;
@@ -66,6 +72,26 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   transition: background 0.15s;
+}
+
+.btn-refresh-schema {
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #c7d2fe;
+  transition: background 0.15s;
+}
+
+.btn-refresh-schema:hover {
+  background: #e0e7ff;
+}
+
+.btn-refresh-schema:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-clear-chat:hover {
@@ -127,6 +153,14 @@
   color: var(--color-text-primary);
   border-bottom-left-radius: 4px;
   border: 1px solid #ede9ff;
+}
+
+.message-bubble.thinking {
+  background: #f3f4f6;
+  color: #6b7280;
+  font-family: "Courier New", monospace;
+  font-style: italic;
+  opacity: 0.8;
 }
 
 .msg-text {
@@ -237,6 +271,73 @@
   color: var(--color-text-primary);
   background: var(--color-white);
   transition: border-color 0.15s;
+}
+
+.approval-card {
+  margin: 0 24px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff7ed;
+  padding: 14px 16px;
+}
+
+.approval-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #9a3412;
+}
+
+.approval-subtitle {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.approval-sql {
+  background: #fff;
+  border: 1px dashed #fdba74;
+  border-radius: 10px;
+  padding: 10px;
+  margin: 10px 0 12px;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  color: #7c2d12;
+}
+
+.approval-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.approval-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.approval-btn.approve {
+  background: #22c55e;
+  color: #fff;
+}
+
+.approval-btn.deny {
+  background: #ef4444;
+  color: #fff;
+}
+
+.approval-error {
+  margin: 0 24px 16px;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
+.schema-status {
+  margin: 0 24px 16px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
 }
 
 .ai-input:focus {
