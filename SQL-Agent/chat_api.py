@@ -1,14 +1,21 @@
 import json
 import os
 import uuid
+import hashlib
+import time
+import asyncio
 from functools import lru_cache
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Dict, Tuple
+from datetime import datetime, timedelta
+from threading import Lock
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, event
+from sqlalchemy.pool import QueuePool
 
 try:
     from dotenv import load_dotenv
@@ -28,7 +35,131 @@ from langchain_setup import (
 )
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import ToolMessage, AIMessageChunk
+from langchain_core.runnables import RunnableConfig
+
+
+# =========================
+# RESPONSE CACHING WITH TTL
+# =========================
+class ResponseCache:
+    """TTL-based response cache for SQL queries and chat responses"""
+    
+    def __init__(self, ttl_seconds: int = 300, max_size: int = 100):
+        self.ttl = ttl_seconds
+        self.max_size = max_size
+        self._cache: Dict[str, Tuple[Any, float]] = {}
+        self._lock = Lock()
+    
+    def _generate_key(self, query: str, context: str = "") -> str:
+        """Generate cache key from query and optional context"""
+        key_str = f"{context}:{query}"
+        return hashlib.md5(key_str.encode()).hexdigest()
+    
+    def get(self, query: str, context: str = "") -> Optional[Any]:
+        """Get cached response if not expired"""
+        key = self._generate_key(query, context)
+        with self._lock:
+            if key in self._cache:
+                result, timestamp = self._cache[key]
+                if time.time() - timestamp < self.ttl:
+                    print(f"[CACHE] Hit for key: {key[:8]}...")
+                    return result
+                else:
+                    # Expired, remove it
+                    del self._cache[key]
+                    print(f"[CACHE] Expired and removed: {key[:8]}...")
+        return None
+    
+    def set(self, query: str, result: Any, context: str = "") -> None:
+        """Cache response with timestamp"""
+        key = self._generate_key(query, context)
+        with self._lock:
+            # Evict oldest if at capacity
+            if len(self._cache) >= self.max_size:
+                oldest_key = min(self._cache, key=lambda k: self._cache[k][1])
+                del self._cache[oldest_key]
+                print(f"[CACHE] Evicted oldest: {oldest_key[:8]}...")
+            
+            self._cache[key] = (result, time.time())
+            print(f"[CACHE] Stored: {key[:8]}... (size: {len(self._cache)})")
+    
+    def clear(self) -> None:
+        """Clear all cached responses"""
+        with self._lock:
+            self._cache.clear()
+            print("[CACHE] All entries cleared")
+    
+    def stats(self) -> Dict[str, Any]:
+        """Get cache statistics"""
+        with self._lock:
+            now = time.time()
+            valid_entries = sum(1 for _, ts in self._cache.values() if now - ts < self.ttl)
+            expired_entries = len(self._cache) - valid_entries
+            return {
+                "total_entries": len(self._cache),
+                "valid_entries": valid_entries,
+                "expired_entries": expired_entries,
+                "max_size": self.max_size,
+                "ttl_seconds": self.ttl
+            }
+
+
+# =========================
+# SCHEMA MONITORING
+# =========================
+class SchemaMonitor:
+    """Monitor database schema for changes and auto-refresh agent"""
+    
+    def __init__(self, runtime: 'Runtime', check_interval_seconds: int = 60):
+        self.runtime = runtime
+        self.check_interval = check_interval_seconds
+        self._last_schema_hash: Optional[str] = None
+        self._running = False
+        self._task: Optional[asyncio.Task] = None
+    
+    def _compute_schema_hash(self) -> str:
+        """Compute hash of current schema snapshot"""
+        schema = self.runtime.schema_snapshot or ""
+        return hashlib.md5(schema.encode()).hexdigest()
+    
+    async def _check_and_refresh(self) -> None:
+        """Periodic check for schema changes"""
+        while self._running:
+            try:
+                current_hash = self._compute_schema_hash()
+                
+                if self._last_schema_hash is None:
+                    self._last_schema_hash = current_hash
+                    print(f"[SCHEMA-MONITOR] Initial hash: {current_hash[:8]}...")
+                elif current_hash != self._last_schema_hash:
+                    print(f"[SCHEMA-MONITOR] Schema change detected! Refreshing agent...")
+                    print(f"[SCHEMA-MONITOR] Old: {self._last_schema_hash[:8]}... -> New: {current_hash[:8]}...")
+                    refresh_schema(self.runtime)
+                    self._last_schema_hash = current_hash
+                    # Clear response cache on schema change
+                    if hasattr(self.runtime, 'response_cache'):
+                        self.runtime.response_cache.clear()
+                
+                await asyncio.sleep(self.check_interval)
+            except Exception as e:
+                print(f"[SCHEMA-MONITOR] Error: {e}")
+                await asyncio.sleep(self.check_interval)
+    
+    def start(self) -> None:
+        """Start schema monitoring"""
+        if not self._running:
+            self._running = True
+            self._last_schema_hash = self._compute_schema_hash()
+            self._task = asyncio.create_task(self._check_and_refresh())
+            print(f"[SCHEMA-MONITOR] Started (interval: {self.check_interval}s)")
+    
+    def stop(self) -> None:
+        """Stop schema monitoring"""
+        self._running = False
+        if self._task:
+            self._task.cancel()
+            print("[SCHEMA-MONITOR] Stopped")
 
 
 @dataclass
@@ -41,6 +172,8 @@ class Runtime:
     run_query: Callable[[str], Any]
     settings: Any
     schema_snapshot: Optional[str] = None
+    response_cache: Optional[ResponseCache] = None
+    schema_monitor: Optional[SchemaMonitor] = None
 
 
 class StartResponse(BaseModel):
@@ -85,6 +218,23 @@ class HistoryOut(BaseModel):
 class RefreshSchemaOut(BaseModel):
     schema_cached: bool
     table_count: int
+    auto_refresh_enabled: bool = True
+
+
+class CacheStatsOut(BaseModel):
+    enabled: bool
+    total_entries: int
+    valid_entries: int
+    expired_entries: int
+    max_size: int
+    ttl_seconds: int
+    hit_rate: Optional[float] = None
+
+
+class StreamingChunk(BaseModel):
+    type: str  # "thinking", "content", "action", "done"
+    data: Any
+    session_id: str
 
 
 app = FastAPI()
@@ -286,23 +436,36 @@ def init_agent_runtime() -> Runtime:
         tools,
         prompt=system_prompt,
         checkpointer=InMemorySaver(),
-        interrupt_before=["tools"], # Instruct LangGraph to pause before executing ANY tool
+        interrupt_before=["tools"],
     )
 
-    engine = create_engine(settings.database_url)
+    # Enhanced database connection pooling
+    engine = create_engine(
+        settings.database_url,
+        poolclass=QueuePool,
+        pool_size=10,
+        max_overflow=20,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        pool_timeout=30
+    )
     create_schema(engine)
+    print("[DEBUG] Database connection pool created (size: 10, max_overflow: 20)")
+
+    # Initialize response cache (5 min TTL, 100 max entries)
+    response_cache = ResponseCache(ttl_seconds=300, max_size=100)
+    print("[DEBUG] Response cache initialized (TTL: 300s, max: 100)")
 
     if settings.sql_query_cache_size > 0:
         print(f"[DEBUG] Query caching enabled (size: {settings.sql_query_cache_size})")
         @lru_cache(maxsize=settings.sql_query_cache_size)
         def cached_run(query: str) -> Any:
             return db.run(query)
-
         run_query = cached_run
     else:
         run_query = db.run
 
-    return Runtime(
+    runtime = Runtime(
         model=model,
         db=db,
         tools=tools,
@@ -311,7 +474,15 @@ def init_agent_runtime() -> Runtime:
         run_query=run_query,
         settings=settings,
         schema_snapshot=schema_snapshot,
+        response_cache=response_cache,
     )
+    
+    # Initialize and start schema auto-monitor
+    schema_monitor = SchemaMonitor(runtime, check_interval_seconds=60)
+    runtime.schema_monitor = schema_monitor
+    schema_monitor.start()
+    
+    return runtime
 
 
 def refresh_schema(runtime: Runtime) -> None:
@@ -347,6 +518,16 @@ def startup() -> None:
     print("[DEBUG] [chat-api] Server runtime ready.")
 
 
+@app.on_event("shutdown")
+def shutdown() -> None:
+    global RUNTIME
+    print("[DEBUG] [chat-api] Shutting down server...")
+    if RUNTIME and RUNTIME.schema_monitor:
+        RUNTIME.schema_monitor.stop()
+        print("[DEBUG] [chat-api] Schema monitor stopped.")
+    print("[DEBUG] [chat-api] Server shutdown complete.")
+
+
 @app.post("/chat/start", response_model=StartResponse)
 def start_chat() -> StartResponse:
     if not RUNTIME:
@@ -365,6 +546,148 @@ def refresh_schema_endpoint() -> RefreshSchemaOut:
     return RefreshSchemaOut(
         schema_cached=bool(RUNTIME.schema_snapshot),
         table_count=table_count,
+        auto_refresh_enabled=RUNTIME.schema_monitor is not None and RUNTIME.schema_monitor._running,
+    )
+
+
+@app.get("/chat/cache-stats", response_model=CacheStatsOut)
+def get_cache_stats() -> CacheStatsOut:
+    """Get response cache statistics"""
+    if not RUNTIME or not RUNTIME.response_cache:
+        return CacheStatsOut(
+            enabled=False,
+            total_entries=0,
+            valid_entries=0,
+            expired_entries=0,
+            max_size=0,
+            ttl_seconds=0,
+        )
+    
+    stats = RUNTIME.response_cache.stats()
+    return CacheStatsOut(
+        enabled=True,
+        **stats
+    )
+
+
+@app.post("/chat/clear-cache")
+def clear_cache() -> dict:
+    """Clear the response cache"""
+    if not RUNTIME or not RUNTIME.response_cache:
+        return {"message": "Cache not initialized", "cleared": False}
+    
+    RUNTIME.response_cache.clear()
+    return {"message": "Cache cleared successfully", "cleared": True}
+
+
+async def stream_chat_response(payload: ChatMessageIn):
+    """Stream chat response with real-time updates"""
+    if not RUNTIME:
+        raise HTTPException(status_code=500, detail="Runtime not initialized")
+
+    session_id = ensure_session(RUNTIME.engine, payload.session_id)
+    save_message(RUNTIME.engine, session_id, "user", payload.message)
+    
+    # Send initial ping to establish connection
+    yield f"data: {json.dumps({'type': 'ping', 'data': 'connected', 'session_id': session_id})}\n\n"
+    
+    # Check cache first
+    cache_key = f"{session_id}:{payload.message}"
+    cached_response = RUNTIME.response_cache.get(payload.message, cache_key) if RUNTIME.response_cache else None
+    
+    if cached_response:
+        # Return cached response as single chunk
+        yield f"data: {json.dumps({'type': 'thinking', 'data': 'Cached response', 'session_id': session_id})}\n\n"
+        await asyncio.sleep(0.1)
+        yield f"data: {json.dumps({'type': 'content', 'data': cached_response, 'session_id': session_id})}\n\n"
+        yield f"data: {json.dumps({'type': 'done', 'data': None, 'session_id': session_id})}\n\n"
+        return
+    
+    # Generate thinking preview
+    thinking_preview = None
+    if RUNTIME.settings.enable_thinking_preview:
+        try:
+            reflection_prompt = build_reflection_prompt(payload.message)
+            reflection = RUNTIME.model.invoke([{"role": "user", "content": reflection_prompt}])
+            thinking_preview = getattr(reflection, "content", "")
+            yield f"data: {json.dumps({'type': 'thinking', 'data': thinking_preview, 'session_id': session_id})}\n\n"
+        except Exception as e:
+            print(f"[STREAM] Thinking preview error: {e}")
+    
+    config = {"configurable": {"thread_id": session_id}}
+    input_data = {"messages": [{"role": "user", "content": payload.message}]}
+    
+    assistant_message = ""
+    pending_action = None
+    error_occurred = None
+    
+    try:
+        while True:
+            for step in RUNTIME.agent.stream(input_data, config, stream_mode="values"):
+                if "messages" in step:
+                    msg = step["messages"][-1]
+                    # Only stream AI messages (not human/tool messages)
+                    if hasattr(msg, 'type') and msg.type == 'ai' and hasattr(msg, 'content') and msg.content:
+                        # Stream content chunks
+                        content_chunk = msg.content
+                        assistant_message += content_chunk
+                        yield f"data: {json.dumps({'type': 'content', 'data': content_chunk, 'session_id': session_id})}\n\n"
+                        await asyncio.sleep(0.02)  # Small delay for smooth streaming
+            
+            input_data = None
+            state = RUNTIME.agent.get_state(config)
+            
+            if not state.next:
+                if state.values.get("messages"):
+                    final_content = state.values["messages"][-1].content
+                    # Cache the final response
+                    if RUNTIME.response_cache:
+                        RUNTIME.response_cache.set(payload.message, final_content, cache_key)
+                break
+            
+            if state.next[0] == "tools":
+                last_message = state.values["messages"][-1]
+                if not last_message.tool_calls:
+                    break
+                
+                tool_call = last_message.tool_calls[0]
+                tool_name = tool_call["name"]
+                tool_args = tool_call["args"]
+                
+                if tool_name != "sql_db_query" or is_read_only_sql(tool_args.get("query", "")):
+                    yield f"data: {json.dumps({'type': 'action', 'data': f'Auto-approving: {tool_name}', 'session_id': session_id})}\n\n"
+                    continue
+                
+                # Pending action - stream it
+                pending_action = {
+                    "tool_name": tool_name,
+                    "tool_args": tool_args,
+                    "description": f"Pending approval for {tool_name}",
+                }
+                yield f"data: {json.dumps({'type': 'action', 'data': pending_action, 'session_id': session_id})}\n\n"
+                break
+                
+    except Exception as e:
+        error_occurred = str(e)
+        print(f"[STREAM] Error during streaming: {e}")
+        yield f"data: {json.dumps({'type': 'error', 'data': error_occurred, 'session_id': session_id})}\n\n"
+    finally:
+        # Always send done event
+        yield f"data: {json.dumps({'type': 'done', 'data': pending_action or error_occurred, 'session_id': session_id})}\n\n"
+
+
+@app.post("/chat/message-stream")
+def send_message_stream(payload: ChatMessageIn):
+    """Streaming endpoint for chat messages"""
+    return StreamingResponse(
+        stream_chat_response(payload),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+            "Access-Control-Allow-Origin": "*",
+        }
     )
 
 
@@ -564,3 +887,70 @@ def get_history(session_id: str) -> HistoryOut:
     ]
 
     return HistoryOut(session_id=session_id, messages=messages)
+
+
+@app.get("/health")
+def health_check():
+    """Health check with performance metrics"""
+    if not RUNTIME:
+        return {
+            "status": "unhealthy",
+            "runtime": "not initialized"
+        }
+    
+    cache_stats = RUNTIME.response_cache.stats() if RUNTIME.response_cache else None
+    
+    # Get session count from database
+    with RUNTIME.engine.begin() as connection:
+        session_count = connection.execute(
+            text("SELECT COUNT(*) FROM chat_sessions")
+        ).scalar()
+        message_count = connection.execute(
+            text("SELECT COUNT(*) FROM chat_messages")
+        ).scalar()
+    
+    return {
+        "status": "healthy",
+        "features": {
+            "response_caching": cache_stats is not None,
+            "auto_schema_refresh": RUNTIME.schema_monitor is not None and RUNTIME.schema_monitor._running,
+            "streaming": True,
+            "connection_pooling": True
+        },
+        "performance": {
+            "cache": cache_stats,
+            "pool_size": 10,
+            "max_overflow": 20
+        },
+        "stats": {
+            "active_sessions": session_count or 0,
+            "total_messages": message_count or 0,
+            "table_count": len(RUNTIME.db.get_usable_table_names()) if RUNTIME.db else 0
+        }
+    }
+
+
+@app.get("/")
+def root():
+    return {
+        "service": "SQL Agent Chat API",
+        "version": "2.0",
+        "features": [
+            "Response Caching (TTL-based)",
+            "Auto Schema Refresh",
+            "Streaming Responses",
+            "Connection Pooling",
+            "Session Persistence (PostgreSQL)"
+        ],
+        "endpoints": [
+            "/chat/start",
+            "/chat/message",
+            "/chat/message-stream",
+            "/chat/approve",
+            "/chat/history/{session_id}",
+            "/chat/refresh-schema",
+            "/chat/cache-stats",
+            "/chat/clear-cache",
+            "/health"
+        ]
+    }

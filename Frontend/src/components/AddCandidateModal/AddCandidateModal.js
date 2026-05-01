@@ -272,66 +272,68 @@ const lastName = parsed?.lastName || "";
     const currentStage = "APPLIED";
 
     // ================= UPDATE FORM =================
+    // Only overwrite fields if they are empty (preserve user-entered data)
     setForm(prev => ({
       ...prev,
 
-      name,
-      firstName,
-      middleName,
-      lastName,
+      // Only update name fields if user hasn't entered them
+      name: prev.name || name,
+      firstName: prev.firstName || firstName,
+      middleName: prev.middleName || middleName,
+      lastName: prev.lastName || lastName,
 
-      email,
-      phone,
-      alternatePhone,
-      dateOfBirth,
-      gender,
+      email: prev.email || email,
+      phone: prev.phone || phone,
+      alternatePhone: prev.alternatePhone || alternatePhone,
+      dateOfBirth: prev.dateOfBirth || dateOfBirth,
+      gender: prev.gender || gender,
 
-      addressFull,
-      city,
-      state,
-      country,
-      pincode,
-      location,
+      addressFull: prev.addressFull || addressFull,
+      city: prev.city || city,
+      state: prev.state || state,
+      country: prev.country || country,
+      pincode: prev.pincode || pincode,
+      location: prev.location || location,
 
-      linkedinUrl,
-      githubUrl,
-      portfolioUrl,
-      websiteUrl,
-      otherLinks,
+      linkedinUrl: prev.linkedinUrl || linkedinUrl,
+      githubUrl: prev.githubUrl || githubUrl,
+      portfolioUrl: prev.portfolioUrl || portfolioUrl,
+      websiteUrl: prev.websiteUrl || websiteUrl,
+      otherLinks: prev.otherLinks?.length > 0 ? prev.otherLinks : otherLinks,
 
-      summaryText,
-      careerObjective,
+      summaryText: prev.summaryText || summaryText,
+      careerObjective: prev.careerObjective || careerObjective,
 
-      totalExperienceYears,
-      yearsOfExperience: totalExperienceYears,
+      totalExperienceYears: prev.totalExperienceYears || totalExperienceYears,
+      yearsOfExperience: prev.yearsOfExperience || totalExperienceYears,
 
-      currentJobTitle: jobTitle,
-      currentCompany,
-      domain,
+      currentJobTitle: prev.currentJobTitle || jobTitle,
+      currentCompany: prev.currentCompany || currentCompany,
+      domain: prev.domain || domain,
 
-      highestEducation,
-      primarySkill,
+      highestEducation: prev.highestEducation || highestEducation,
+      primarySkill: prev.primarySkill || primarySkill,
 
-      // IMPORTANT
-      educationDetails,
-      experienceDetails,
-      projects,
-      skillsDetailed,
-      achievements,
-      certifications,
-      positions,
-      codingProfiles,
-      languages,
-      publications,
-      activities,
-      sectionName,
-      sectionData,
+      // Array fields - merge if empty
+      educationDetails: prev.educationDetails?.length > 0 ? prev.educationDetails : educationDetails,
+      experienceDetails: prev.experienceDetails?.length > 0 ? prev.experienceDetails : experienceDetails,
+      projects: prev.projects?.length > 0 ? prev.projects : projects,
+      skillsDetailed: prev.skillsDetailed?.length > 0 ? prev.skillsDetailed : skillsDetailed,
+      achievements: prev.achievements?.length > 0 ? prev.achievements : achievements,
+      certifications: prev.certifications?.length > 0 ? prev.certifications : certifications,
+      positions: prev.positions?.length > 0 ? prev.positions : positions,
+      codingProfiles: prev.codingProfiles?.length > 0 ? prev.codingProfiles : codingProfiles,
+      languages: prev.languages?.length > 0 ? prev.languages : languages,
+      publications: prev.publications?.length > 0 ? prev.publications : publications,
+      activities: prev.activities?.length > 0 ? prev.activities : activities,
+      sectionName: prev.sectionName?.length > 0 ? prev.sectionName : sectionName,
+      sectionData: prev.sectionData?.length > 0 ? prev.sectionData : sectionData,
 
-      // UI compatibility
-      skills,
-      department: jobTitle,
+      // UI compatibility - merge skills
+      skills: prev.skills || skills,
+      department: prev.department || jobTitle,
 
-      currentStage
+      currentStage: prev.currentStage || currentStage
     }));
 
   } catch (err) {

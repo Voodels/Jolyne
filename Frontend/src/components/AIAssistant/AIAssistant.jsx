@@ -1,4 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import Sidebar from '../Sidebar/Sidebar';
 import TopBar from '../TopBar/TopBar';
 import {
@@ -20,9 +22,20 @@ function AIAssistant() {
   const [error, setError] = useState('');
   const [schemaStatus, setSchemaStatus] = useState('');
   const [schemaRefreshing, setSchemaRefreshing] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const bottomRef = useRef(null);
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const suggestedQuestions = [
+    "How many candidates?",
+    "Show all candidates",
+    "Top skills in database",
+    "Candidates with Java experience",
+    "Average years of experience"
+  ];
 
   const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
@@ -71,8 +84,28 @@ function AIAssistant() {
     return started.session_id;
   };
 
-  const handleSend = async () => {
-    const text = input.trim();
+  const streamText = useCallback((text, callback) => {
+    setIsStreaming(true);
+    setStreamingText('');
+    const words = text.split(/\s+/);
+    let index = 0;
+
+    const interval = setInterval(() => {
+      if (index < words.length) {
+        setStreamingText(prev => prev + (prev ? ' ' : '') + words[index]);
+        index++;
+      } else {
+        clearInterval(interval);
+        setIsStreaming(false);
+        callback();
+      }
+    }, 30); // 30ms per word for smooth effect
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSend = async (textOverride = null) => {
+    const text = textOverride || input.trim();
     if (!text) return;
 
     const userMsg = {
@@ -83,9 +116,10 @@ function AIAssistant() {
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    setInput('');
+    if (!textOverride) setInput('');
     setLoading(true);
     setError('');
+    setShowSuggestions(false);
 
     try {
       const activeSession = await ensureSession();
@@ -98,22 +132,43 @@ function AIAssistant() {
       if (response.pending_action) {
         console.log('[chat] pending action received', response.pending_action);
         setPendingAction(response.pending_action);
+        setThinkingPreview('');
       } else if (response.assistant_message) {
         console.log('[chat] assistant message received');
-        const aiMsg = {
-          id: Date.now() + 1,
-          role: 'ai',
-          text: response.assistant_message,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setMessages((prev) => [...prev, aiMsg]);
         setThinkingPreview('');
+        
+        // Stream the text animation
+        streamText(response.assistant_message, () => {
+          const aiMsg = {
+            id: Date.now() + 1,
+            role: 'ai',
+            text: response.assistant_message,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+          setMessages((prev) => [...prev, aiMsg]);
+          setStreamingText('');
+        });
       }
     } catch (err) {
       console.error(err);
       setError('Unable to reach the chatbot service.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSuggestionClick = (question) => {
+    handleSend(question);
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  const regenerateResponse = async () => {
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMsg) {
+      handleSend(lastUserMsg.text);
     }
   };
 
@@ -152,6 +207,53 @@ function AIAssistant() {
       handleSend();
     }
   };
+
+  const renderMessageContent = (text) => {
+    // Check if it's a table-like structure (SQL results often have | or ----)
+    const isTable = text.includes('|') && (text.includes('---') || text.includes('candidate') || text.includes('name') || text.includes('email'));
+    
+    if (isTable) {
+      // Try to parse and render as HTML table
+      return <SQLTable content={text} />;
+    }
+
+    return (
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code({ node, inline, className, children, ...props }) {
+            return inline ? (
+              <code className="inline-code" {...props}>{children}</code>
+            ) : (
+              <pre className="code-block"><code {...props}>{children}</code></pre>
+            );
+          },
+          table({ children }) {
+            return <table className="sql-table">{children}</table>;
+          }
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    );
+  };
+
+  const MessageActions = ({ text, onRegenerate }) => (
+    <div className="message-actions">
+      <button className="msg-action-btn" onClick={() => copyToClipboard(text)} title="Copy">
+        📋
+      </button>
+      <button className="msg-action-btn" onClick={onRegenerate} title="Regenerate">
+        🔄
+      </button>
+      <button className="msg-action-btn" title="Helpful">
+        👍
+      </button>
+      <button className="msg-action-btn" title="Not helpful">
+        👎
+      </button>
+    </div>
+  );
 
   const handleClearChat = () => {
     setMessages([]);
@@ -213,26 +315,49 @@ function AIAssistant() {
 
             {/* Messages */}
             <div className="ai-messages">
-              {messages.map((msg) => (
+              {messages.map((msg, index) => (
                 <div key={msg.id} className={`message-row ${msg.role}`}>
                   {msg.role === 'ai' && (
                     <div className="ai-msg-avatar">🤖</div>
                   )}
                   <div className={`message-bubble ${msg.role}`}>
                     <>
-                      <p className="msg-text">{msg.text}</p>
+                      <div className="msg-text markdown-content">
+                        {renderMessageContent(msg.text)}
+                      </div>
                       <span className="msg-time">{msg.time}</span>
+                      {msg.role === 'ai' && (
+                        <MessageActions 
+                          text={msg.text} 
+                          onRegenerate={index === messages.length - 1 ? regenerateResponse : null}
+                        />
+                      )}
                     </>
                   </div>
                 </div>
               ))}
 
               {thinkingPreview && (
-                <div className="message-row ai">
+                <div className="message-row ai thinking-row">
                   <div className="ai-msg-avatar">🤖</div>
                   <div className="message-bubble ai thinking">
-                    <p className="msg-text">{thinkingPreview}</p>
-                    <span className="msg-time">processing</span>
+                    <div className="thinking-indicator">
+                      <span className="thinking-dot"></span>
+                      <span className="thinking-dot"></span>
+                      <span className="thinking-dot"></span>
+                    </div>
+                    <p className="msg-text thinking-text">{thinkingPreview}</p>
+                    <span className="msg-time">thinking...</span>
+                  </div>
+                </div>
+              )}
+
+              {isStreaming && streamingText && (
+                <div className="message-row ai streaming-row">
+                  <div className="ai-msg-avatar">🤖</div>
+                  <div className="message-bubble ai streaming">
+                    <p className="msg-text">{streamingText}</p>
+                    <span className="streaming-cursor">▊</span>
                   </div>
                 </div>
               )}
@@ -283,6 +408,24 @@ function AIAssistant() {
               <div className="schema-status">{schemaStatus}</div>
             )}
 
+            {/* Suggested Questions */}
+            {showSuggestions && messages.length === 0 && (
+              <div className="suggested-questions">
+                <p className="suggestions-label">Try asking:</p>
+                <div className="suggestion-chips">
+                  {suggestedQuestions.map((q, i) => (
+                    <button 
+                      key={i} 
+                      className="suggestion-chip"
+                      onClick={() => handleSuggestionClick(q)}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Input Area */}
             <div className="ai-input-area">
               <div className="ai-input-row">
@@ -304,6 +447,49 @@ function AIAssistant() {
       </div>
     </div>
   );
+}
+
+// SQL Table Component for rendering SQL results
+function SQLTable({ content }) {
+  // Try to parse markdown table format
+  const lines = content.split('\n').filter(line => line.trim());
+  
+  // Check if it's a markdown table
+  if (lines.some(line => line.includes('|'))) {
+    const rows = lines
+      .filter(line => !line.includes('---')) // Remove separator line
+      .map(line => line.split('|').filter(cell => cell.trim()));
+    
+    if (rows.length === 0) return <pre>{content}</pre>;
+    
+    const headers = rows[0];
+    const dataRows = rows.slice(1);
+    
+    return (
+      <div className="sql-table-container">
+        <table className="sql-results-table">
+          <thead>
+            <tr>
+              {headers.map((header, i) => (
+                <th key={i}>{header.trim()}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataRows.map((row, i) => (
+              <tr key={i}>
+                {row.map((cell, j) => (
+                  <td key={j}>{cell.trim()}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+  
+  return <pre className="sql-raw">{content}</pre>;
 }
 
 export default AIAssistant;
