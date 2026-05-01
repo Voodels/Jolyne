@@ -11,8 +11,8 @@ Jolyne is a full-stack HR tooling application that combines candidate management
 
 ```mermaid
 flowchart LR
-    UI[Frontend (React)] --> API[Backend (Spring Boot)]
-    UI --> Chat[SQL-Agent API (FastAPI)]
+    UI["Frontend (React)"] --> API["Backend (Spring Boot)"]
+    UI --> Chat["SQL-Agent API (FastAPI)"]
     API --> DB[(PostgreSQL)]
     Chat --> DB
     Chat --> LLM[LLM Provider]
@@ -48,9 +48,9 @@ The SQL Agent answers natural language questions about candidate data by generat
 ```mermaid
 flowchart TD
     U[User Question] --> UI[AI Assistant UI]
-    UI --> S[SQL-Agent API]
-    S --> A[LangGraph ReAct Agent]
-    A --> T[SQL Tools: list/schema/check/query]
+    UI --> S["SQL-Agent API"]
+    S --> A["LangGraph ReAct Agent"]
+    A --> T["SQL Tools: list/schema/check/query"]
     A --> H{Human Approval}
     H -->|Approve| Q[Execute SQL]
     H -->|Deny| A
